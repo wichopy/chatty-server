@@ -28,6 +28,14 @@ wss.broadcast = function broadcast(data) {
 };
 let clients = {};
 
+const urlify = (text) => {
+  var urlRegex = /(https?:\/\/.*\.(?:png|jpg|gif|jpeg|svg))/i;
+  return text.replace(urlRegex, function (url) {
+    return '<img src="' + url + '">';
+  });
+  // or alternatively
+  // return text.replace(urlRegex, '<a href="$1">$1</a>')
+};
 wss.on('connection', (client) => {
   let newuser = {
     id: uuid.v1(),
@@ -42,6 +50,10 @@ wss.on('connection', (client) => {
   newuser.content = [Object.keys(clients).length, `User ${newuser.id} connected.`];
   //broadcast new user joined.
   wss.broadcast(JSON.stringify(newuser));
+  wss.broadcast(JSON.stringify({
+    type: 'systemUpdate',
+    content: Object.keys(clients).length
+  }));
 
   //initialize this client with a userid.
   newuser.code = 'newuser';
@@ -78,6 +90,7 @@ wss.on('connection', (client) => {
           newMessage.type = 'incomingMessage';
           // ws.send(JSON.stringify(newMessage));
           newMessage.color = clients[newMessage.userid].color;
+          console.log(urlify(newMessage.content));
           wss.broadcast(JSON.stringify(newMessage));
           break;
         default:
@@ -95,10 +108,13 @@ wss.on('connection', (client) => {
       username: '',
       id: uuid.v1()
     };
-    if (logout.content === ' disconnected.'){
+    if (logout.content === ' disconnected.') {
       logout.content = 'Annonymous disconnected.'
     }
+    console.log("before delete from clients");
+    console.log(clients);
     delete clients[newuser.id];
+    console.log('clients after logout');
     console.log(clients);
     wss.broadcast(JSON.stringify(logout));
     wss.broadcast(JSON.stringify({ type: 'systemUpdate', content: Object.keys(clients).length }));
