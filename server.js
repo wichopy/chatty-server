@@ -1,5 +1,5 @@
 // server.js
-
+var HOST = location.origin.replace(/^http/, 'ws')
 const express = require('express');
 const SocketServer = require('ws').Server;
 var uuid = require('node-uuid');
@@ -15,7 +15,7 @@ const server = express()
 
 // Create the WebSockets server
 //**Need to do server: app to use express. */
-const wss = new SocketServer({ server });
+const wss = new SocketServer({ HOST });
 
 // Set up a callback that will run when a client connects to the server
 // When a client connects they are assigned a socket, represented by
